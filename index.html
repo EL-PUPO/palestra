@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f1115" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Palestra" />
+    <link rel="icon" href="favicon.ico" sizes="48x48" />
+    <link rel="icon" href="icona.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon-180x180.png" />
+    <title>Palestra</title>
+    <script>
+      // Applica il tema salvato prima del primo render, per evitare lampi di colore
+      try {
+        var s = JSON.parse(localStorage.getItem('palestra-impostazioni') || '{}')
+        var t = s.tema || 'auto'
+        if (t === 'auto') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'scuro' : 'chiaro'
+        document.documentElement.dataset.tema = t
+        // su iPhone la barra di stato con testo bianco va bene solo col tema scuro
+        if (t === 'chiaro') document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').setAttribute('content', 'default')
+        if (s.accento) document.documentElement.dataset.accento = s.accento
+        if (s.testo) document.documentElement.dataset.testo = s.testo
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
