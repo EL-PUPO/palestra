@@ -210,7 +210,7 @@ export function Impostazioni() {
           <span className="etichetta-sezione">I tuoi dati</span>
           <div className="card colonna">
             <p className="piccolo muto">
-              Tutto è salvato solo su questo telefono. Fai un backup ogni tanto e salvalo su File o iCloud Drive: se cambi telefono o cancelli l'app, lo
+              Tutto è salvato solo su questo telefono. I brani MP3 non entrano nel backup: se cambi telefono li reimporti dall'app File. Fai un backup ogni tanto e salvalo su File o iCloud Drive: se cambi telefono o cancelli l'app, lo
               ripristini da qui.
               {imp.ultimoBackup ? ` Ultimo backup: ${giorniFa(imp.ultimoBackup)}.` : ' Non hai ancora fatto un backup.'}
             </p>

@@ -4,7 +4,9 @@ import { aggiornaImpostazioni, impostazioni, useImpostazioni } from '../lib/impo
 import { mmss } from '../lib/formato'
 import { leggiLinkYouTube, linkNelTesto, stessoLink, urlApp } from '../lib/musica'
 import { caricaYouTube, nomeDaLink, STATO, titoloVideo, type LettoreYouTube } from '../lib/youtube'
-import { Foglio } from './ui'
+import { pausaLocale, impostaYoutubeAperto } from '../lib/lettoreLocale'
+import { LibreriaBrani } from './LibreriaBrani'
+import { Foglio, Segmentato } from './ui'
 
 function tipoLink(link: string): string {
   const l = leggiLinkYouTube(link)
@@ -182,7 +184,10 @@ function Lettore({ indirizzo }: { indirizzo: string }) {
               setStato(e.data)
               aggiornaInfo(e.target)
               if (e.data === STATO.inRiproduzione || e.data === STATO.caricamento) setAvviso('')
-              if (e.data === STATO.inRiproduzione) segnaBloccata(indirizzo, false)
+              if (e.data === STATO.inRiproduzione) {
+                segnaBloccata(indirizzo, false)
+                pausaLocale()
+              }
             },
             onError: (e) => {
               const bloccato = e.data === 101 || e.data === 150 || e.data === 100
@@ -205,6 +210,11 @@ function Lettore({ indirizzo }: { indirizzo: string }) {
       lettore.current = null
     }
   }, [link, indirizzo])
+
+  useEffect(() => {
+    impostaYoutubeAperto(true)
+    return () => impostaYoutubeAperto(false)
+  }, [])
 
   // barra piccola in alto quando i comandi escono dallo schermo
   useEffect(() => {
@@ -399,6 +409,7 @@ export function PannelloMusica({ chiudi }: { chiudi: () => void }) {
   const [gestione, setGestione] = useState(false)
   const scelta = Math.min(imp.musicaScelta, Math.max(0, imp.musica.length - 1))
   const brano = imp.musica[scelta]
+  const fonte = imp.fonteMusica
 
   return (
     <div className="card colonna" style={{ gap: 10 }}>
@@ -408,7 +419,7 @@ export function PannelloMusica({ chiudi }: { chiudi: () => void }) {
           <h3>Musica</h3>
         </div>
         <div className="riga" style={{ gap: 2 }}>
-          {brano && (
+          {brano && fonte === 'youtube' && (
             <button className="btn piccolo" onClick={() => setGestione(true)}>
               <Library size={16} /> Playlist
             </button>
@@ -419,7 +430,21 @@ export function PannelloMusica({ chiudi }: { chiudi: () => void }) {
         </div>
       </div>
 
-      {!brano ? (
+      <Segmentato
+        opzioni={[
+          { valore: 'youtube', etichetta: 'YouTube' },
+          { valore: 'brani', etichetta: 'I miei brani' },
+        ]}
+        valore={fonte}
+        cambia={(f) => {
+          aggiornaImpostazioni({ fonteMusica: f })
+          if (f === 'youtube') pausaLocale()
+        }}
+      />
+
+      {fonte === 'brani' ? (
+        <LibreriaBrani />
+      ) : !brano ? (
         <>
           <p className="piccolo muto">In YouTube apri una playlist, tocca Condividi → Copia link e incollala qui. Puoi aggiungerne quante vuoi.</p>
           <GestionePlaylist />

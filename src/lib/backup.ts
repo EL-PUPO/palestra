@@ -94,7 +94,7 @@ export async function ripristinaBackup(file: File): Promise<void> {
 }
 
 export async function cancellaTutto() {
-  await Promise.all([db.esercizi.clear(), db.schede.clear(), db.sessioni.clear(), db.misure.clear(), db.foto.clear()])
+  await Promise.all([db.esercizi.clear(), db.schede.clear(), db.sessioni.clear(), db.misure.clear(), db.foto.clear(), db.brani.clear()])
 }
 
 /** Chiede al browser di non cancellare mai i dati per liberare spazio */

@@ -24,6 +24,8 @@ export interface Impostazioni {
   /** playlist o video di YouTube salvati */
   musica: BranoMusica[]
   musicaScelta: number
+  /** da dove viene la musica nel pannello */
+  fonteMusica: 'youtube' | 'brani'
   ultimoBackup?: number
 }
 
@@ -52,6 +54,7 @@ export const PREDEFINITE: Impostazioni = {
   mostraCronometro: true,
   musica: [],
   musicaScelta: 0,
+  fonteMusica: 'youtube',
 }
 
 // letta anche dallo script in index.html per applicare il tema prima del primo render

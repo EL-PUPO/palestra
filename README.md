@@ -13,7 +13,7 @@ I dati restano solo sul telefono.
 - **Serie con − 0 +**: «0» = ripetizioni come da scheda; ogni + è una ripetizione in più, ogni − una in meno. I carichi dell'ultima volta sono già compilati.
 - **Massimale**: una serie da 1 colpo diventa da sola un massimale (MAX, fino a 3 colpi); nella scheda basta scrivere «massimale», «1RM» o «max 3 colpi». Il massimale reale compare tra i record.
 - **Recupero unico** per tutto l'allenamento (tasto «Recupero»), con ±15 secondi sulla barra durante il recupero; cronometro nascondibile; data, ora e durata degli allenamenti modificabili.
-- **Musica**: salvi le tue playlist di YouTube e le ascolti in un lettore dentro l'app durante l'allenamento (oppure le apri nell'app YouTube).
+- **Musica**, due fonti: **YouTube** (le tue playlist in un lettore dentro l'app, con comandi propri) e **I miei brani** (MP3 importati dall'app File: senza pubblicità e senza internet, continuano cambiando pagina, comandi anche nella schermata di blocco). I brani non entrano nel backup.
 - **Suggerimenti di carico**: se chiudi tutte le serie (e, se c'è un intervallo come 8-10, arrivi al massimo) l'app ti propone di aumentare il carico.
 - **Cardio** a tempo e/o distanza, esercizi **a tempo** (plank), **piramidali** (10/8/6), superserie.
 - **Storico** con calendario, **progressi** con grafici e record, **corpo** (peso, misure, foto).

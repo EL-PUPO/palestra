@@ -129,12 +129,26 @@ export interface FotoProgresso {
   note?: string
 }
 
+/** Un file musicale importato dall'app File (MP3, M4A…) */
+export interface Brano {
+  id: string
+  titolo: string
+  artista?: string
+  /** secondi */
+  durata?: number
+  file: Blob
+  /** byte */
+  dimensione: number
+  aggiuntoIl: number
+}
+
 export const db = new Dexie('palestra') as Dexie & {
   esercizi: EntityTable<Esercizio, 'id'>
   schede: EntityTable<Scheda, 'id'>
   sessioni: EntityTable<Sessione, 'id'>
   misure: EntityTable<MisuraCorpo, 'id'>
   foto: EntityTable<FotoProgresso, 'id'>
+  brani: EntityTable<Brano, 'id'>
 }
 
 const TABELLE = {
@@ -165,6 +179,9 @@ db.version(2)
         s.nomeGiorno = numera(s.nomeGiorno)
       })
   })
+
+// v3: libreria di brani MP3
+db.version(3).stores({ ...TABELLE, brani: 'id, aggiuntoIl' })
 
 /** Id univoco che funziona anche fuori da HTTPS (crypto.randomUUID no) */
 export function nuovoId(): string {

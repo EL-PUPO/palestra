@@ -1,5 +1,6 @@
 import { ChartLine, ClipboardList, History, House, Scale } from 'lucide-react'
 import { HashRouter, NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { MiniBrani } from './componenti/LibreriaBrani'
 import { Toast } from './componenti/ui'
 import { Allenamento } from './pagine/Allenamento'
 import { Corpo } from './pagine/Corpo'
@@ -54,6 +55,7 @@ function Struttura() {
           </nav>
         </div>
       )}
+      <MiniBrani />
       <Toast />
     </div>
   )
