@@ -12,6 +12,7 @@ import { descriviObiettivo } from '../lib/descrizioni'
 import { chiaveGiorno, daGiornoEOra, giorniFa, orario } from '../lib/formato'
 import { useImpostazioni } from '../lib/impostazioni'
 import { obiettivoSerie, storicoEsercizio, type Prestazione } from '../lib/statistiche'
+import { impostaMusicaAperta, useMusicaAperta } from '../lib/statoMusica'
 
 function SchedaRegistro({ sessione, voce, esercizio, storico }: { sessione: Sessione; voce: VoceSessione; esercizio?: Esercizio; storico: Prestazione[] }) {
   const aggiorna = (f: (v: VoceSessione) => VoceSessione) => aggiornaVoce(sessione.id, voce.uid, f)
@@ -106,7 +107,7 @@ export function Registro() {
   const [durata, setDurata] = useState<number | undefined>()
   const [menu, setMenu] = useState(false)
   const [libreria, setLibreria] = useState(false)
-  const [musica, setMusica] = useState(false)
+  const musica = useMusicaAperta()
   const concluse = useMemo(() => (sessioni ?? []).filter((s) => s.fine), [sessioni])
   const sessione = sessioni?.find((s) => !s.fine)
 
@@ -158,7 +159,7 @@ export function Registro() {
         indietro="/"
         azioni={
           <>
-            <button className={`btn-icona${musica ? ' pieno' : ''}`} aria-label="Musica" onClick={() => setMusica(!musica)} style={musica ? { color: 'var(--accento)' } : undefined}>
+            <button className={`btn-icona${musica ? ' pieno' : ''}`} aria-label="Musica" onClick={() => impostaMusicaAperta(!musica)} style={musica ? { color: 'var(--accento)' } : undefined}>
               <Music size={21} />
             </button>
             <button className="btn-icona pieno" aria-label="Menu registro" onClick={() => setMenu(true)}>
@@ -172,7 +173,7 @@ export function Registro() {
           <ClipboardPen size={15} /> Registro: scrivi i risultati, senza timer
         </div>
 
-        {musica && <PannelloMusica chiudi={() => setMusica(false)} />}
+        {musica && <PannelloMusica chiudi={() => impostaMusicaAperta(false)} />}
 
         <div className="card colonna">
           <Segmentato
@@ -228,6 +229,9 @@ export function Registro() {
 
         <button className="btn primario grande pieno" onClick={salva}>
           <Save size={20} /> Salva allenamento
+        </button>
+        <button className="btn pericolo pieno" onClick={annulla}>
+          <Trash2 size={18} /> Annulla registro
         </button>
       </div>
 

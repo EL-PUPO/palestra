@@ -1,13 +1,15 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronRight, ClipboardPaste, ClipboardPen, Download, Flame, Play, Settings, Share, Timer } from 'lucide-react'
+import { ChevronRight, ClipboardPaste, ClipboardPen, Download, Flame, Music, Play, Settings, Share, Timer } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { PannelloMusica } from '../componenti/PannelloMusica'
 import { Testata, Vuoto } from '../componenti/ui'
 import { db, type GiornoScheda, type Modalita } from '../db'
 import { iniziaSessione, percorsoSessione, prossimoGiorno } from '../lib/allenamento'
 import { dataBreve, dataLunga, durataLeggibile, giorniFa, maiuscolaIniziale, ora } from '../lib/formato'
 import { useImpostazioni } from '../lib/impostazioni'
 import { contaSerie, sessioniSettimana, settimaneDiFila } from '../lib/statistiche'
+import { impostaMusicaAperta, useMusicaAperta } from '../lib/statoMusica'
 
 const suIphoneNelBrowser =
   typeof navigator !== 'undefined' &&
@@ -20,6 +22,7 @@ export function Home() {
   const sessioni = useLiveQuery(() => db.sessioni.orderBy('inizio').reverse().toArray(), [])
   const schede = useLiveQuery(() => db.schede.toArray(), [])
   const [giornoScelto, setGiornoScelto] = useState<string | null>(null)
+  const musica = useMusicaAperta()
 
   if (!sessioni || !schede) return null
 
@@ -48,15 +51,28 @@ export function Home() {
           </span>
         }
         azioni={
-          <Link to="/impostazioni" className="btn-icona" aria-label="Impostazioni">
-            <Settings size={22} />
-          </Link>
+          <>
+            <button
+              className={`btn-icona${musica ? ' pieno' : ''}`}
+              aria-label="Musica"
+              aria-pressed={musica}
+              onClick={() => impostaMusicaAperta(!musica)}
+              style={musica ? { color: 'var(--accento)' } : undefined}
+            >
+              <Music size={22} />
+            </button>
+            <Link to="/impostazioni" className="btn-icona" aria-label="Impostazioni">
+              <Settings size={22} />
+            </Link>
+          </>
         }
       />
       <div className="pagina">
         <p className="muto" style={{ marginTop: -10 }}>
           {maiuscolaIniziale(dataLunga(Date.now()))}
         </p>
+
+        {musica && <PannelloMusica chiudi={() => impostaMusicaAperta(false)} />}
 
         {suIphoneNelBrowser && (
           <div className="avviso info">

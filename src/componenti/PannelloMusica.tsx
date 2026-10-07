@@ -5,6 +5,7 @@ import { mmss } from '../lib/formato'
 import { leggiLinkYouTube, linkNelTesto, stessoLink, urlApp } from '../lib/musica'
 import { caricaYouTube, nomeDaLink, STATO, titoloVideo, type LettoreYouTube } from '../lib/youtube'
 import { pausaLocale, impostaYoutubeAperto } from '../lib/lettoreLocale'
+import { posizioneYouTube, salvaPosizioneYouTube } from '../lib/statoMusica'
 import { LibreriaBrani } from './LibreriaBrani'
 import { Foglio, Segmentato } from './ui'
 
@@ -169,6 +170,7 @@ function Lettore({ indirizzo }: { indirizzo: string }) {
       setIndice(p.getPlaylistIndex())
       setLista(p.getPlaylist() ?? [])
     }
+    const ripresa = posizioneYouTube(indirizzo)
     caricaYouTube()
       .then((YT) => {
         if (finito) return
@@ -177,9 +179,18 @@ function Lettore({ indirizzo }: { indirizzo: string }) {
           height: '100%',
           // con un link solo-playlist il campo non va proprio messo: vuoto dà "Invalid video id"
           ...(link.video ? { videoId: link.video } : {}),
-          playerVars: { playsinline: 1, rel: 0, controls: 0, ...(link.lista ? { listType: 'playlist', list: link.lista } : {}) },
+          playerVars: {
+            playsinline: 1,
+            rel: 0,
+            controls: 0,
+            ...(link.lista ? { listType: 'playlist', list: link.lista } : {}),
+            ...(ripresa ? { index: Math.max(0, ripresa.indice), start: Math.floor(ripresa.tempo) } : {}),
+          },
           events: {
-            onReady: (e) => aggiornaInfo(e.target),
+            onReady: (e) => {
+              aggiornaInfo(e.target)
+              if (ripresa?.suonava) e.target.playVideo()
+            },
             onStateChange: (e) => {
               setStato(e.data)
               aggiornaInfo(e.target)
@@ -206,7 +217,12 @@ function Lettore({ indirizzo }: { indirizzo: string }) {
       .catch((e: Error) => setAvviso(e.message === 'YouTube non raggiungibile' ? 'Serve la connessione a internet per la musica' : 'YouTube non riesce ad aprire questo link'))
     return () => {
       finito = true
-      lettore.current?.destroy()
+      const p = lettore.current
+      if (p?.getPlayerState) {
+        const s = p.getPlayerState()
+        salvaPosizioneYouTube({ indirizzo, indice: p.getPlaylistIndex(), tempo: p.getCurrentTime(), suonava: s === STATO.inRiproduzione || s === STATO.caricamento })
+      }
+      p?.destroy()
       lettore.current = null
     }
   }, [link, indirizzo])

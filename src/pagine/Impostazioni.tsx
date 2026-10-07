@@ -126,7 +126,7 @@ export function Impostazioni() {
             <Riga titolo="Recupero predefinito" sotto="Secondi, se la scheda non lo indica. Durante l'allenamento lo cambi dal tasto Recupero">
               <Passi valore={imp.recuperoPredefinito} min={0} max={600} passo={15} etichetta="recupero" cambia={(recuperoPredefinito) => aggiornaImpostazioni({ recuperoPredefinito })} />
             </Riga>
-            <Riga titolo="Avvia il recupero da solo" sotto="Quando segni una serie come fatta">
+            <Riga titolo="Timer di recupero" sotto="Parte da solo quando segni una serie come fatta">
               <Interruttore attivo={imp.recuperoAutomatico} cambia={(recuperoAutomatico) => aggiornaImpostazioni({ recuperoAutomatico })} etichetta="Avvia il recupero da solo" />
             </Riga>
             <Riga titolo="Passa da solo all'esercizio dopo" sotto="Quando finisci tutte le serie">
@@ -136,8 +136,8 @@ export function Impostazioni() {
                 etichetta="Passa da solo all'esercizio dopo"
               />
             </Riga>
-            <Riga titolo="Cronometro" sotto="Tempo trascorso durante l'allenamento">
-              <Interruttore attivo={imp.mostraCronometro} cambia={(mostraCronometro) => aggiornaImpostazioni({ mostraCronometro })} etichetta="Mostra il cronometro" />
+            <Riga titolo="Tempo trascorso" sotto="Da quanto ti stai allenando, in alto">
+              <Interruttore attivo={imp.mostraCronometro} cambia={(mostraCronometro) => aggiornaImpostazioni({ mostraCronometro })} etichetta="Mostra il tempo trascorso" />
             </Riga>
             <Riga titolo="Suono a fine recupero">
               <Interruttore attivo={imp.suono} cambia={(suono) => aggiornaImpostazioni({ suono })} etichetta="Suono a fine recupero" />

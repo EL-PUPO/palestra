@@ -160,6 +160,7 @@ svg { flex-shrink: 0; }
   border: 1px solid var(--bordo); background: var(--superficie); font-size: 0.85rem; white-space: nowrap;
 }
 .chip.attivo { background: var(--accento); border-color: var(--accento); color: #fff; }
+.chip.spento { color: var(--testo-3); border-style: dashed; }
 .chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; }
 .chips::-webkit-scrollbar { display: none; }
 

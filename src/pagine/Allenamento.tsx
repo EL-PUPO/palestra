@@ -11,6 +11,7 @@ import {
   Minus,
   MoreHorizontal,
   Music,
+  Pencil,
   Plus,
   Replace,
   StickyNote,
@@ -26,7 +27,7 @@ import { CalcolatoreDischi } from '../componenti/CalcolatoreDischi'
 import { PannelloMusica } from '../componenti/PannelloMusica'
 import { ScegliEsercizio } from '../componenti/ScegliEsercizio'
 import { aggiornaVoce, conKg, conValore, IntestazioneSerie, RigaSerie, Riscaldamento, serieInPiu, UltimaVolta } from '../componenti/Serie'
-import { CampoNumero, CampoTesto, Foglio, mostraMessaggio, Testata, Vuoto } from '../componenti/ui'
+import { CampoNumero, CampoTesto, Foglio, Interruttore, mostraMessaggio, Testata, Vuoto } from '../componenti/ui'
 import { db, type Esercizio, type Sessione, type VoceSessione } from '../db'
 import {
   aggiungiVoce,
@@ -44,6 +45,7 @@ import { descriviObiettivo } from '../lib/descrizioni'
 import { giorniFa, mmss, numero, recupero } from '../lib/formato'
 import { aggiornaImpostazioni, useImpostazioni, type Impostazioni } from '../lib/impostazioni'
 import { contaSerie, obiettivoSerie, storicoEsercizio, suggerisci, type Prestazione } from '../lib/statistiche'
+import { impostaMusicaAperta, useMusicaAperta } from '../lib/statoMusica'
 import { avviaRecupero, fermaRecupero, sbloccaAudio } from '../lib/timer'
 
 function useSchermoAcceso(attivo: boolean) {
@@ -245,8 +247,8 @@ function SchedaEsercizio({
                   </button>
                 </>
               )}
-              <button className="btn piccolo" onClick={() => avviaRecupero(recuperoSec)}>
-                {recupero(recuperoSec)}
+              <button className="btn piccolo" aria-label="Avvia il recupero adesso" onClick={() => avviaRecupero(recuperoSec)}>
+                <Timer size={15} /> {recupero(recuperoSec)}
               </button>
             </div>
           </div>
@@ -279,7 +281,7 @@ export function Allenamento() {
   const [libreria, setLibreria] = useState<'aggiungi' | 'sostituisci' | null>(null)
   const [dischi, setDischi] = useState<{ kg?: number } | null>(null)
   const [riscaldamento, setRiscaldamento] = useState<{ kg?: number } | null>(null)
-  const [musica, setMusica] = useState(false)
+  const musica = useMusicaAperta()
   const [sceltaRecupero, setSceltaRecupero] = useState(false)
   useSchermoAcceso(imp.schermoAcceso)
 
@@ -346,6 +348,12 @@ export function Allenamento() {
     }
   }
 
+  /** Accende o spegne il timer di recupero; spegnendolo si ferma anche quello in corso */
+  const alternaTimer = () => {
+    if (imp.recuperoAutomatico) fermaRecupero()
+    aggiornaImpostazioni({ recuperoAutomatico: !imp.recuperoAutomatico })
+  }
+
   const annulla = async () => {
     if (!confirm('Annullare questo allenamento? Quello che hai segnato verrà perso.')) return
     fermaRecupero()
@@ -406,7 +414,7 @@ export function Allenamento() {
         indietro="/"
         azioni={
           <>
-            <button className={`btn-icona${musica ? ' pieno' : ''}`} aria-label="Musica" onClick={() => setMusica(!musica)} style={musica ? { color: 'var(--accento)' } : undefined}>
+            <button className={`btn-icona${musica ? ' pieno' : ''}`} aria-label="Musica" onClick={() => impostaMusicaAperta(!musica)} style={musica ? { color: 'var(--accento)' } : undefined}>
               <Music size={21} />
             </button>
             <button className="btn-icona pieno" aria-label="Menu allenamento" onClick={() => setMenu(true)}>
@@ -418,8 +426,13 @@ export function Allenamento() {
       <div className="pagina" style={{ paddingBottom: 110 }}>
         <div className="riga spazio muto piccolo" style={{ marginTop: -8 }}>
           {imp.mostraCronometro ? <Cronometro inizio={sessione.inizio} /> : <span>{fatte} / {totali} serie</span>}
-          <button className="chip" style={{ padding: '4px 10px' }} onClick={() => setSceltaRecupero(true)} aria-label="Cambia il recupero di questo allenamento">
-            <Timer size={14} /> Recupero {recupero(recuperoAttuale)}
+          <button
+            className={`chip${imp.recuperoAutomatico ? '' : ' spento'}`}
+            style={{ padding: '5px 12px' }}
+            onClick={() => setSceltaRecupero(true)}
+            aria-label="Modifica il tempo di recupero"
+          >
+            {imp.recuperoAutomatico ? <Timer size={15} /> : <TimerOff size={15} />} Recupero {imp.recuperoAutomatico ? recupero(recuperoAttuale) : 'spento'} <Pencil size={13} />
           </button>
           {imp.mostraCronometro && (
             <span>
@@ -428,7 +441,7 @@ export function Allenamento() {
           )}
         </div>
 
-        {musica && <PannelloMusica chiudi={() => setMusica(false)} />}
+        {musica && <PannelloMusica chiudi={() => impostaMusicaAperta(false)} />}
 
         {voci.length > 1 && (
           <div className="navigazione-esercizi" role="tablist" aria-label="Esercizi">
@@ -489,9 +502,13 @@ export function Allenamento() {
             )}
           </div>
         )}
+
+        <button className="btn pericolo pieno" style={{ marginTop: 8 }} onClick={annulla}>
+          <Trash2 size={18} /> Annulla allenamento
+        </button>
       </div>
 
-      <BarraRecupero dopo={prossima} />
+      <BarraRecupero dopo={prossima} apri={() => setSceltaRecupero(true)} />
 
       <Foglio aperto={menu} chiudi={() => setMenu(false)} titolo="Allenamento">
         <div className="lista">
@@ -539,12 +556,12 @@ export function Allenamento() {
           <button
             className="voce"
             onClick={() => {
-              aggiornaImpostazioni({ mostraCronometro: !imp.mostraCronometro })
+              alternaTimer()
               setMenu(false)
             }}
           >
-            {imp.mostraCronometro ? <TimerOff size={20} /> : <Timer size={20} />}
-            <span className="corpo">{imp.mostraCronometro ? 'Nascondi il cronometro' : 'Mostra il cronometro'}</span>
+            {imp.recuperoAutomatico ? <TimerOff size={20} /> : <Timer size={20} />}
+            <span className="corpo">{imp.recuperoAutomatico ? 'Spegni il timer di recupero' : 'Accendi il timer di recupero'}</span>
           </button>
           <button className="voce" onClick={passaARegistro}>
             <ClipboardPen size={20} /> <span className="corpo">Passa al registro (scrivi solo i risultati)</span>
@@ -564,9 +581,16 @@ export function Allenamento() {
         </div>
       </Foglio>
 
-      <Foglio aperto={sceltaRecupero} chiudi={() => setSceltaRecupero(false)} titolo="Recupero">
+      <Foglio aperto={sceltaRecupero} chiudi={() => setSceltaRecupero(false)} titolo="Tempo di recupero">
         <div className="colonna">
-          <p className="piccolo muto">Vale per tutti gli esercizi di questo allenamento. Mentre recuperi puoi sempre aggiungere o togliere 15 secondi.</p>
+          <div className="card riga spazio" style={{ padding: '10px 14px' }}>
+            <div>
+              <div style={{ fontWeight: 600 }}>Timer di recupero</div>
+              <div className="piccolo muto">{imp.recuperoAutomatico ? 'Parte da solo quando segni una serie' : 'Spento: segnando una serie non parte'}</div>
+            </div>
+            <Interruttore attivo={imp.recuperoAutomatico} cambia={() => alternaTimer()} etichetta="Timer di recupero" />
+          </div>
+          <p className="piccolo muto">Il tempo vale per tutti gli esercizi di questo allenamento. Mentre recuperi puoi sempre aggiungere o togliere 15 secondi.</p>
           <div className="centro" style={{ fontSize: '2.4rem', fontWeight: 750, fontVariantNumeric: 'tabular-nums' }}>
             {mmss(recuperoAttuale)}
           </div>
@@ -585,9 +609,20 @@ export function Allenamento() {
               </button>
             ))}
           </div>
-          <button className="btn primario" onClick={() => setSceltaRecupero(false)}>
-            Fatto
-          </button>
+          <div className="griglia-2">
+            <button
+              className="btn"
+              onClick={() => {
+                avviaRecupero(recuperoAttuale)
+                setSceltaRecupero(false)
+              }}
+            >
+              <Timer size={18} /> Avvia ora
+            </button>
+            <button className="btn primario" onClick={() => setSceltaRecupero(false)}>
+              Fatto
+            </button>
+          </div>
         </div>
       </Foglio>
 
