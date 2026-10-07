@@ -1,6 +1,7 @@
-import { AlertTriangle, Check, ExternalLink, Library, ListMusic, Music, Pause, Pencil, Play, Plus, Shuffle, SkipBack, SkipForward, Trash2, X } from 'lucide-react'
+import { AlertTriangle, Check, ExternalLink, FastForward, Library, ListMusic, Music, Pause, Pencil, Play, Plus, Rewind, Shuffle, SkipBack, SkipForward, Trash2, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { aggiornaImpostazioni, impostazioni, useImpostazioni } from '../lib/impostazioni'
+import { mmss } from '../lib/formato'
 import { leggiLinkYouTube, linkNelTesto, stessoLink, urlApp } from '../lib/musica'
 import { caricaYouTube, nomeDaLink, STATO, titoloVideo, type LettoreYouTube } from '../lib/youtube'
 import { Foglio } from './ui'
@@ -151,6 +152,8 @@ function Lettore({ indirizzo }: { indirizzo: string }) {
   const [altezzaTestata, setAltezzaTestata] = useState(56)
   /** nemmeno il primo brano si può ascoltare qui: la lista non si carica */
   const [bloccata, setBloccata] = useState(false)
+  const [tempo, setTempo] = useState(0)
+  const [durata, setDurata] = useState(0)
 
   useEffect(() => {
     if (!link || !contenitore.current) return
@@ -158,6 +161,8 @@ function Lettore({ indirizzo }: { indirizzo: string }) {
     const segnaposto = document.createElement('div')
     contenitore.current.replaceChildren(segnaposto)
     const aggiornaInfo = (p: LettoreYouTube) => {
+      setDurata(p.getDuration?.() ?? 0)
+      setTempo(p.getCurrentTime?.() ?? 0)
       setTitolo(p.getVideoData()?.title ?? '')
       setIndice(p.getPlaylistIndex())
       setLista(p.getPlaylist() ?? [])
@@ -228,9 +233,27 @@ function Lettore({ indirizzo }: { indirizzo: string }) {
     }
   }, [elenco, lista])
 
+  const suona = stato === STATO.inRiproduzione || stato === STATO.caricamento
+
+  // posizione nel brano aggiornata mentre suona
+  useEffect(() => {
+    if (!suona) return
+    const t = setInterval(() => {
+      const p = lettore.current
+      if (!p) return
+      setTempo(p.getCurrentTime())
+      setDurata(p.getDuration())
+    }, 500)
+    return () => clearInterval(t)
+  }, [suona])
+
   if (!link) return <p className="piccolo pericolo">Questo link non è valido: cambialo nelle impostazioni.</p>
 
-  const suona = stato === STATO.inRiproduzione || stato === STATO.caricamento
+  const vaiA = (secondi: number) => {
+    const t = Math.max(0, Math.min(durata || secondi, secondi))
+    setTempo(t)
+    lettore.current?.seekTo(t, true)
+  }
   const playPausa = () => {
     const p = lettore.current
     if (!p) return
@@ -295,6 +318,26 @@ function Lettore({ indirizzo }: { indirizzo: string }) {
       <div>
         <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{titolo || 'Caricamento…'}</div>
         <div className="piccolo muto">{playlist ? `Brano ${indice + 1} di ${lista.length}` : 'Video singolo: per scegliere le canzoni salva il link di una playlist'}</div>
+      </div>
+      <div className="avanzamento-musica">
+        <button className="btn-icona" aria-label="Indietro di 10 secondi" onClick={() => vaiA(tempo - 10)} disabled={!durata}>
+          <Rewind size={18} />
+        </button>
+        <span>{mmss(tempo)}</span>
+        <input
+          type="range"
+          min={0}
+          max={Math.max(1, Math.floor(durata))}
+          step={1}
+          value={Math.min(Math.floor(tempo), Math.floor(durata) || 0)}
+          onChange={(e) => vaiA(Number(e.target.value))}
+          disabled={!durata}
+          aria-label="Posizione nel brano"
+        />
+        <span>{mmss(durata)}</span>
+        <button className="btn-icona" aria-label="Avanti di 10 secondi" onClick={() => vaiA(tempo + 10)} disabled={!durata}>
+          <FastForward size={18} />
+        </button>
       </div>
       <div className="comandi-musica" ref={comandi}>
         <button className={`btn-icona${casuale ? ' pieno' : ''}`} aria-label="Ordine casuale" aria-pressed={casuale} onClick={mescola} disabled={!playlist} style={casuale ? { color: 'var(--accento)' } : undefined}>

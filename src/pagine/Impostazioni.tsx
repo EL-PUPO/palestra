@@ -123,7 +123,7 @@ export function Impostazioni() {
         <div className="sezione">
           <span className="etichetta-sezione">Allenamento</span>
           <div className="lista">
-            <Riga titolo="Recupero predefinito" sotto="Secondi, se la scheda non lo indica">
+            <Riga titolo="Recupero predefinito" sotto="Secondi, se la scheda non lo indica. Durante l'allenamento lo cambi dal tasto Recupero">
               <Passi valore={imp.recuperoPredefinito} min={0} max={600} passo={15} etichetta="recupero" cambia={(recuperoPredefinito) => aggiornaImpostazioni({ recuperoPredefinito })} />
             </Riga>
             <Riga titolo="Avvia il recupero da solo" sotto="Quando segni una serie come fatta">
@@ -135,6 +135,9 @@ export function Impostazioni() {
                 cambia={(avanzamentoAutomatico) => aggiornaImpostazioni({ avanzamentoAutomatico })}
                 etichetta="Passa da solo all'esercizio dopo"
               />
+            </Riga>
+            <Riga titolo="Cronometro" sotto="Tempo trascorso durante l'allenamento">
+              <Interruttore attivo={imp.mostraCronometro} cambia={(mostraCronometro) => aggiornaImpostazioni({ mostraCronometro })} etichetta="Mostra il cronometro" />
             </Riga>
             <Riga titolo="Suono a fine recupero">
               <Interruttore attivo={imp.suono} cambia={(suono) => aggiornaImpostazioni({ suono })} etichetta="Suono a fine recupero" />

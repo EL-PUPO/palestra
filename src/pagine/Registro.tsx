@@ -9,14 +9,9 @@ import { CampoNumero, CampoTesto, Foglio, Segmentato, Testata, Vuoto } from '../
 import { db, type Esercizio, type Sessione, type VoceSessione } from '../db'
 import { aggiungiVoce, assicuraEsercizio, percorsoSessione, salvaRegistro } from '../lib/allenamento'
 import { descriviObiettivo } from '../lib/descrizioni'
-import { chiaveGiorno, daChiaveGiorno, giorniFa } from '../lib/formato'
+import { chiaveGiorno, daGiornoEOra, giorniFa, orario } from '../lib/formato'
 import { useImpostazioni } from '../lib/impostazioni'
 import { obiettivoSerie, storicoEsercizio, type Prestazione } from '../lib/statistiche'
-
-function oraDi(ts: number) {
-  const d = new Date(ts)
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-}
 
 function SchedaRegistro({ sessione, voce, esercizio, storico }: { sessione: Sessione; voce: VoceSessione; esercizio?: Esercizio; storico: Prestazione[] }) {
   const aggiorna = (f: (v: VoceSessione) => VoceSessione) => aggiornaVoce(sessione.id, voce.uid, f)
@@ -128,12 +123,7 @@ export function Registro() {
     )
   }
 
-  const cambiaData = (data: string, ora: string) => {
-    const [h, m] = ora.split(':').map(Number)
-    const d = daChiaveGiorno(data)
-    d.setHours(h || 0, m || 0, 0, 0)
-    void db.sessioni.update(sessione.id, { inizio: d.getTime() })
-  }
+  const cambiaData = (data: string, ora: string) => void db.sessioni.update(sessione.id, { inizio: daGiornoEOra(data, ora) })
 
   const salva = async () => {
     const s = await db.sessioni.get(sessione.id)
@@ -197,11 +187,11 @@ export function Registro() {
             <div className="griglia-3">
               <label className="campo">
                 <span>Giorno</span>
-                <input type="date" value={chiaveGiorno(sessione.inizio)} max={chiaveGiorno()} onChange={(e) => e.target.value && cambiaData(e.target.value, oraDi(sessione.inizio))} />
+                <input type="date" value={chiaveGiorno(sessione.inizio)} max={chiaveGiorno()} onChange={(e) => e.target.value && cambiaData(e.target.value, orario(sessione.inizio))} />
               </label>
               <label className="campo">
                 <span>Ora</span>
-                <input type="time" value={oraDi(sessione.inizio)} onChange={(e) => e.target.value && cambiaData(chiaveGiorno(sessione.inizio), e.target.value)} />
+                <input type="time" value={orario(sessione.inizio)} onChange={(e) => e.target.value && cambiaData(chiaveGiorno(sessione.inizio), e.target.value)} />
               </label>
               <label className="campo">
                 <span>Durata (min)</span>

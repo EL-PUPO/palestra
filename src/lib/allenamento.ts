@@ -15,6 +15,7 @@ import {
   type VoceSessione,
 } from '../db'
 import { indovinaGruppo } from './catalogo'
+import { impostazioni } from './impostazioni'
 import { normalizzaNome } from './formato'
 import { obiettivoSerie, serieFatte, storicoEsercizio, type Prestazione } from './statistiche'
 
@@ -30,7 +31,19 @@ export function obiettivoDi(es: EsercizioScheda): Obiettivo {
     durataMin: es.durataMin,
     distanzaKm: es.distanzaKm,
     note: es.note,
+    massimale: es.massimale,
   }
+}
+
+/**
+ * Una serie è un massimale se fai 1 colpo (in automatico), oppure 2–3 colpi
+ * quando era già un massimale o la scheda lo prevede. Sopra i 3 colpi non lo è più.
+ */
+export function eMassimale(valore: number | undefined, eraMassimale: boolean | undefined, obiettivo?: Obiettivo): boolean {
+  if (valore === undefined || valore < 1) return !!eraMassimale
+  if (valore === 1) return true
+  if (valore > 3) return false
+  return !!eraMassimale || !!obiettivo?.massimale
 }
 
 /** Prepara un esercizio per l'allenamento: ripetizioni previste dalla scheda, carichi dell'ultima volta */
@@ -53,7 +66,9 @@ export function creaVoce(es: Esercizio, obiettivo: Obiettivo, storico: Prestazio
     const target = obiettivoSerie(obiettivo, i, es.tipo)
     const prec = precedenti.length ? precedenti[Math.min(i, precedenti.length - 1)] : undefined
     // si parte da "0" rispetto al previsto: i tasti − e + dicono quante in meno o in più
-    return { obiettivo: target, kg: prec?.kg ?? obiettivo.caricoKg, valore: target ?? prec?.valore, esito: null }
+    const valore = target ?? prec?.valore
+    const massimale = eMassimale(valore, obiettivo.massimale, obiettivo) || undefined
+    return { obiettivo: target, kg: prec?.kg ?? obiettivo.caricoKg, valore, esito: null, massimale }
   })
   return { ...base, serie }
 }
@@ -61,7 +76,20 @@ export function creaVoce(es: Esercizio, obiettivo: Obiettivo, storico: Prestazio
 /** Esito di una serie dalle ripetizioni fatte rispetto alle previste */
 export function esitoDa(s: SerieRegistrata): Esito {
   if (s.valore === undefined) return null
+  // un massimale riuscito è sempre "fatto", anche se la scheda diceva più ripetizioni
+  if (s.massimale) return s.valore >= 1 ? 'si' : 'no'
   return s.obiettivo === undefined || s.valore >= s.obiettivo ? 'si' : 'no'
+}
+
+/** Recupero unico per l'allenamento: quello più usato nella scheda, altrimenti quello delle impostazioni */
+export function recuperoDellAllenamento(voci: VoceSessione[]): number {
+  const conteggio = new Map<number, number>()
+  for (const v of voci) {
+    const r = v.tipo === 'cardio' ? undefined : v.obiettivo.recuperoSec
+    if (r) conteggio.set(r, (conteggio.get(r) ?? 0) + 1)
+  }
+  const piuUsato = [...conteggio].sort((a, b) => b[1] - a[1])[0]?.[0]
+  return piuUsato ?? impostazioni().recuperoPredefinito
 }
 
 /** Esito del cardio: "no" se durata o distanza sono sotto il previsto */
@@ -93,6 +121,7 @@ export async function iniziaSessione(scheda?: Scheda, giorno?: GiornoScheda, mod
     nomeGiorno: giorno?.nome ?? 'Allenamento libero',
     inizio: Date.now(),
     voci,
+    recuperoSec: recuperoDellAllenamento(voci),
     indiceCorrente: 0,
   }
   await db.sessioni.add(s)

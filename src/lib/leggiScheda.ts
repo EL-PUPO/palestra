@@ -55,6 +55,7 @@ const RE_ORE = /(\d(?:[.,]\d)?)\s*(?:h|ore|ora)\b/i
 
 const RE_CARDIO =
   /\b(tapis|treadmill|corsa|correre|camminata|cyclette|cyclet|bike|bici|spinning|ellittica|elliptical|vogatore|rower|stepper|stair|nuoto|air ?bike|assault|salto (?:della |con la )?corda|skierg|crosstrainer|cross trainer|hiit)\b/i
+const RE_MASSIMALE = /\b(?:test\s+(?:di\s+|del\s+)?)?massimal[ei]\b|\b1\s?rm\b|\b(?:max\s*)?(\d)\s*colp[io]\b|\bcolp[io]\b/i
 const RE_ISOMETRICO = /\b(plank|isometric|wall ?sit|hollow|l-?sit|dead ?hang|sedia al muro|ponte)\b/i
 
 const GIORNI_SETTIMANA = 'luned[iì]|marted[iì]|mercoled[iì]|gioved[iì]|venerd[iì]|sabato|domenica'
@@ -186,6 +187,24 @@ function leggiParte(testo: string, rigaOriginale: string): EsercizioLetto {
         tipo = 'tempo'
         o.secondi = rip.repMax
       } else Object.assign(o, { repMin: rip.repMin, repMax: rip.repMax, repPerSerie: rip.repPerSerie })
+    }
+  }
+
+  // 2b. massimale: parola "massimale"/"1RM"/"colpi", oppure 1 sola ripetizione
+  let massimale = false
+  let colpi: number | undefined
+  for (let mm = RE_MASSIMALE.exec(resto); mm; mm = RE_MASSIMALE.exec(resto)) {
+    togli(mm)
+    massimale = true
+    if (mm[1]) colpi = Number(mm[1])
+  }
+  if (tipo === 'ripetizioni' && (massimale || (trovateSerie && o.repMax === 1))) {
+    o.massimale = true
+    if (!trovateSerie) {
+      trovateSerie = true
+      o.serie = 1
+      o.repMin = 1
+      o.repMax = Math.min(3, Math.max(1, colpi ?? 1))
     }
   }
 

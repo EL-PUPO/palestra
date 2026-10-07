@@ -19,6 +19,8 @@ export interface Impostazioni {
   recuperoAutomatico: boolean
   /** passa da solo all'esercizio successivo quando finisci le serie */
   avanzamentoAutomatico: boolean
+  /** mostra il tempo trascorso durante l'allenamento */
+  mostraCronometro: boolean
   /** playlist o video di YouTube salvati */
   musica: BranoMusica[]
   musicaScelta: number
@@ -47,6 +49,7 @@ export const PREDEFINITE: Impostazioni = {
   suono: true,
   recuperoAutomatico: true,
   avanzamentoAutomatico: true,
+  mostraCronometro: true,
   musica: [],
   musicaScelta: 0,
 }

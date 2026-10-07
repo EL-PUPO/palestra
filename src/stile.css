@@ -222,12 +222,13 @@ textarea.input, .campo textarea { min-height: 120px; resize: vertical; line-heig
 .allenamento-testa { display: flex; flex-direction: column; gap: 10px; }
 .serie-tabella { display: flex; flex-direction: column; gap: 8px; }
 .serie-riga {
-  display: grid; grid-template-columns: 22px minmax(0, 1fr) auto auto; align-items: center; gap: 8px;
+  display: grid; grid-template-columns: 30px minmax(0, 1fr) auto auto; align-items: center; gap: 8px;
   padding: 8px; border-radius: var(--raggio-s); background: var(--superficie-2); border: 1px solid transparent;
 }
 .serie-riga.si { background: var(--successo-bg); }
 .serie-riga.no { background: var(--attenzione-bg); }
 .serie-n { font-weight: 700; color: var(--testo-2); text-align: center; }
+.badge-max { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.02em; color: #fff; background: var(--accento); border-radius: 5px; padding: 3px 0; text-align: center; }
 .serie-campi { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .serie-campi .kg { width: 100%; max-width: 92px; min-height: 40px; padding: 6px 8px; text-align: center; font-weight: 600; border-radius: 8px; border: 1px solid var(--bordo); background: var(--superficie); outline: none; }
 .serie-campi .kg:focus { border-color: var(--accento); }
@@ -254,6 +255,10 @@ textarea.input, .campo textarea { min-height: 120px; resize: vertical; line-heig
 
 .musica-video { position: relative; width: 100%; aspect-ratio: 16 / 9; min-height: 200px; border-radius: 10px; overflow: hidden; background: #000; }
 .musica-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.avanzamento-musica { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--testo-2); font-variant-numeric: tabular-nums; }
+.avanzamento-musica input[type='range'] { flex: 1; min-width: 0; accent-color: var(--accento); height: 28px; }
+.avanzamento-musica .btn-icona { width: 34px; height: 34px; }
+.avanzamento-musica .btn-icona:disabled { opacity: 0.35; }
 .comandi-musica { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; }
 .comandi-musica .btn-icona:disabled { opacity: 0.35; }
 .tasto-play { width: 62px; height: 62px; border-radius: 50%; border: 0; background: var(--accento); color: #fff; display: inline-flex; align-items: center; justify-content: center; }
@@ -264,7 +269,7 @@ textarea.input, .campo textarea { min-height: 120px; resize: vertical; line-heig
   background: var(--superficie); border: 1px solid var(--bordo); border-radius: 12px; padding: 4px 6px 4px 12px; box-shadow: 0 6px 18px rgb(0 0 0 / 0.14);
 }
 
-.serie-intestazione { display: grid; grid-template-columns: 22px minmax(0, 1fr) 124px 48px; gap: 8px; padding: 0 8px; font-size: 0.72rem; color: var(--testo-3); text-transform: uppercase; letter-spacing: 0.04em; }
+.serie-intestazione { display: grid; grid-template-columns: 30px minmax(0, 1fr) 124px 48px; gap: 8px; padding: 0 8px; font-size: 0.72rem; color: var(--testo-3); text-transform: uppercase; letter-spacing: 0.04em; }
 
 .barra-recupero {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; justify-content: center;

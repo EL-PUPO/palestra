@@ -63,6 +63,20 @@ export function ora(d: number): string {
   return new Date(d).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
 }
 
+/** 18:05 → "18:05" (per i campi ora) */
+export function orario(d: number): string {
+  const x = new Date(d)
+  return `${String(x.getHours()).padStart(2, '0')}:${String(x.getMinutes()).padStart(2, '0')}`
+}
+
+/** Nuovo orario mettendo insieme giorno (AAAA-MM-GG) e ora (HH:MM) */
+export function daGiornoEOra(giorno: string, ora: string): number {
+  const [h, m] = ora.split(':').map(Number)
+  const d = daChiaveGiorno(giorno)
+  d.setHours(h || 0, m || 0, 0, 0)
+  return d.getTime()
+}
+
 export function giorniFa(d: number): string {
   const oggi = daChiaveGiorno(chiaveGiorno()).getTime()
   const quel = daChiaveGiorno(chiaveGiorno(d)).getTime()

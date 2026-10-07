@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { db, type SerieRegistrata, type TipoEsercizio, type VoceSessione } from '../db'
-import { esitoDa } from '../lib/allenamento'
+import { eMassimale, esitoDa } from '../lib/allenamento'
 import { numero, recupero } from '../lib/formato'
 import { serieFatte, type Prestazione } from '../lib/statistiche'
 import { CampoNumero, Contatore, Foglio } from './ui'
@@ -22,11 +22,15 @@ export function conKg(v: VoceSessione, i: number, kg: number | undefined): VoceS
   }
 }
 
-/** Cambia le ripetizioni fatte; se la serie era già segnata, ne ricalcola l'esito */
+/** Cambia le ripetizioni fatte (1 colpo = massimale); se la serie era già segnata, ne ricalcola l'esito */
 export function conValore(v: VoceSessione, i: number, valore: number): VoceSessione {
   return {
     ...v,
-    serie: v.serie.map((x, j) => (j === i ? { ...x, valore, esito: x.esito === null ? null : esitoDa({ ...x, valore }) } : x)),
+    serie: v.serie.map((x, j) => {
+      if (j !== i) return x
+      const nuova = { ...x, valore, massimale: eMassimale(valore, x.massimale, v.obiettivo) || undefined }
+      return { ...nuova, esito: x.esito === null ? null : esitoDa(nuova) }
+    }),
   }
 }
 
@@ -49,6 +53,7 @@ export function UltimaVolta({ p }: { p: Prestazione }) {
           {i > 0 && ' · '}
           {v.tipo === 'ripetizioni' && s.kg !== undefined ? `${numero(s.kg)}×` : ''}
           {v.tipo === 'tempo' ? recupero(s.valore) : s.valore}
+          {s.massimale ? ' MAX' : ''}
         </span>
       ))}
     </span>
@@ -86,7 +91,13 @@ export function RigaSerie({
 }) {
   return (
     <div className={`serie-riga ${colorata ? (s.esito ?? '') : ''}`}>
-      <span className="serie-n">{i + 1}</span>
+      {s.massimale ? (
+        <span className="badge-max" title="Massimale">
+          MAX
+        </span>
+      ) : (
+        <span className="serie-n">{i + 1}</span>
+      )}
       <div className="serie-campi">
         {tipo === 'ripetizioni' ? (
           <CampoNumero className="kg" valore={s.kg} placeholder="kg" aria-label={`Kg serie ${i + 1}`} cambia={cambiaKg} />
@@ -94,7 +105,11 @@ export function RigaSerie({
           <span className="piccolo muto">{s.obiettivo ? `previsti ${recupero(s.obiettivo)}` : ''}</span>
         )}
       </div>
-      <Contatore obiettivo={s.obiettivo} valore={s.valore} cambia={cambiaValore} passo={tipo === 'tempo' ? 5 : 1} unita={tipo === 'tempo' ? 's' : 'rip'} />
+      {s.massimale ? (
+        <Contatore obiettivo={undefined} valore={s.valore} cambia={cambiaValore} unita={s.valore === 1 ? 'colpo' : 'colpi'} solaLettura />
+      ) : (
+        <Contatore obiettivo={s.obiettivo} valore={s.valore} cambia={cambiaValore} passo={tipo === 'tempo' ? 5 : 1} unita={tipo === 'tempo' ? 's' : 'rip'} />
+      )}
       {azione}
     </div>
   )

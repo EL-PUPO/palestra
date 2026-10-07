@@ -14,6 +14,8 @@ import {
   Plus,
   Replace,
   StickyNote,
+  Timer,
+  TimerOff,
   Trash2,
   TrendingUp,
 } from 'lucide-react'
@@ -40,7 +42,7 @@ import {
 import { cercaNelCatalogo } from '../lib/catalogo'
 import { descriviObiettivo } from '../lib/descrizioni'
 import { giorniFa, mmss, numero, recupero } from '../lib/formato'
-import { useImpostazioni, type Impostazioni } from '../lib/impostazioni'
+import { aggiornaImpostazioni, useImpostazioni, type Impostazioni } from '../lib/impostazioni'
 import { contaSerie, obiettivoSerie, storicoEsercizio, suggerisci, type Prestazione } from '../lib/statistiche'
 import { avviaRecupero, fermaRecupero, sbloccaAudio } from '../lib/timer'
 
@@ -105,7 +107,7 @@ function SchedaEsercizio({
   const aggiorna = (f: (v: VoceSessione) => VoceSessione) => aggiornaVoce(sessione.id, voce.uid, f)
   const o = voce.obiettivo
   const sugg = voce.tipo === 'ripetizioni' ? suggerisci(storico, o, esercizio?.incrementoKg ?? imp.incrementoKg, imp.sessioniPerAumento) : undefined
-  const recuperoSec = o.recuperoSec ?? imp.recuperoPredefinito
+  const recuperoSec = sessione.recuperoSec ?? o.recuperoSec ?? imp.recuperoPredefinito
   const range = o.repMin !== undefined && o.repMax !== undefined && o.repMax > o.repMin && !o.repPerSerie
   const ultimaNota = storico[0]?.voce.note
 
@@ -150,7 +152,7 @@ function SchedaEsercizio({
           {esercizio?.gruppo && <span className="badge">{esercizio.gruppo}</span>}
         </div>
         <p className="muto">
-          {descriviObiettivo(o, voce.tipo)}
+          {descriviObiettivo(o, voce.tipo, { senzaRecupero: true })}
           {range ? ' · conta da ' + o.repMin : ''}
         </p>
         {o.note && <p className="piccolo muto">{o.note}</p>}
@@ -278,6 +280,7 @@ export function Allenamento() {
   const [dischi, setDischi] = useState<{ kg?: number } | null>(null)
   const [riscaldamento, setRiscaldamento] = useState<{ kg?: number } | null>(null)
   const [musica, setMusica] = useState(false)
+  const [sceltaRecupero, setSceltaRecupero] = useState(false)
   useSchermoAcceso(imp.schermoAcceso)
 
   const concluse = useMemo(() => (sessioni ?? []).filter((s) => s.fine), [sessioni])
@@ -299,6 +302,9 @@ export function Allenamento() {
   const voci = sessione.voci
   const indice = Math.min(sessione.indiceCorrente ?? 0, Math.max(0, voci.length - 1))
   const voce = voci[indice]
+  // un solo recupero per tutto l'allenamento (i ±15 della barra valgono solo per quello in corso)
+  const recuperoAttuale = sessione.recuperoSec ?? voce?.obiettivo.recuperoSec ?? imp.recuperoPredefinito
+  const impostaRecupero = (secondi: number) => db.sessioni.update(sessione.id, { recuperoSec: Math.max(0, Math.min(600, secondi)) })
   const { fatte } = contaSerie(sessione)
   const totali = voci.reduce((t, v) => t + (v.tipo === 'cardio' ? 1 : v.serie.length), 0)
   const nome = (v?: VoceSessione) => (v ? (esercizi.get(v.esercizioId)?.nome ?? 'Esercizio') : '')
@@ -326,7 +332,7 @@ export function Allenamento() {
   const serieFatta = (ultimaDellEsercizio: boolean) => {
     const restaAltro = voci.some((v, i) => i !== indice && !voceCompletata(v)) || !ultimaDellEsercizio
     if (imp.recuperoAutomatico && restaAltro && voce?.tipo !== 'cardio') {
-      const rec = voce?.obiettivo.recuperoSec ?? imp.recuperoPredefinito
+      const rec = recuperoAttuale
       if (rec > 0) avviaRecupero(rec)
     }
     if (ultimaDellEsercizio && imp.avanzamentoAutomatico) {
@@ -411,10 +417,15 @@ export function Allenamento() {
       />
       <div className="pagina" style={{ paddingBottom: 110 }}>
         <div className="riga spazio muto piccolo" style={{ marginTop: -8 }}>
-          <Cronometro inizio={sessione.inizio} />
-          <span>
-            {fatte} / {totali} serie
-          </span>
+          {imp.mostraCronometro ? <Cronometro inizio={sessione.inizio} /> : <span>{fatte} / {totali} serie</span>}
+          <button className="chip" style={{ padding: '4px 10px' }} onClick={() => setSceltaRecupero(true)} aria-label="Cambia il recupero di questo allenamento">
+            <Timer size={14} /> Recupero {recupero(recuperoAttuale)}
+          </button>
+          {imp.mostraCronometro && (
+            <span>
+              {fatte} / {totali} serie
+            </span>
+          )}
         </div>
 
         {musica && <PannelloMusica chiudi={() => setMusica(false)} />}
@@ -525,6 +536,16 @@ export function Allenamento() {
               <Minus size={20} /> <span className="corpo">Togli questo esercizio</span>
             </button>
           )}
+          <button
+            className="voce"
+            onClick={() => {
+              aggiornaImpostazioni({ mostraCronometro: !imp.mostraCronometro })
+              setMenu(false)
+            }}
+          >
+            {imp.mostraCronometro ? <TimerOff size={20} /> : <Timer size={20} />}
+            <span className="corpo">{imp.mostraCronometro ? 'Nascondi il cronometro' : 'Mostra il cronometro'}</span>
+          </button>
           <button className="voce" onClick={passaARegistro}>
             <ClipboardPen size={20} /> <span className="corpo">Passa al registro (scrivi solo i risultati)</span>
           </button>
@@ -539,6 +560,33 @@ export function Allenamento() {
           </button>
           <button className="voce pericolo" onClick={annulla}>
             <Trash2 size={20} /> <span className="corpo">Annulla allenamento</span>
+          </button>
+        </div>
+      </Foglio>
+
+      <Foglio aperto={sceltaRecupero} chiudi={() => setSceltaRecupero(false)} titolo="Recupero">
+        <div className="colonna">
+          <p className="piccolo muto">Vale per tutti gli esercizi di questo allenamento. Mentre recuperi puoi sempre aggiungere o togliere 15 secondi.</p>
+          <div className="centro" style={{ fontSize: '2.4rem', fontWeight: 750, fontVariantNumeric: 'tabular-nums' }}>
+            {mmss(recuperoAttuale)}
+          </div>
+          <div className="griglia-2">
+            <button className="btn grande" onClick={() => impostaRecupero(recuperoAttuale - 15)}>
+              −15 s
+            </button>
+            <button className="btn grande" onClick={() => impostaRecupero(recuperoAttuale + 15)}>
+              +15 s
+            </button>
+          </div>
+          <div className="riga a-capo" style={{ justifyContent: 'center' }}>
+            {[45, 60, 90, 120, 150, 180, 240].map((s) => (
+              <button key={s} className={`chip${s === recuperoAttuale ? ' attivo' : ''}`} onClick={() => impostaRecupero(s)}>
+                {recupero(s)}
+              </button>
+            ))}
+          </div>
+          <button className="btn primario" onClick={() => setSceltaRecupero(false)}>
+            Fatto
           </button>
         </div>
       </Foglio>

@@ -79,7 +79,7 @@ export function DettaglioEsercizio() {
   const record = tipo === 'ripetizioni' ? recordForza(storico) : undefined
   const spiegazione: Partial<Record<Metrica, string>> = {
     maxKg: 'Il carico più alto usato in ogni allenamento.',
-    massimale: 'Stima del peso che potresti alzare una volta sola, calcolata da carico e ripetizioni.',
+    massimale: 'Il peso alzato per 1 colpo; se non hai fatto massimali è una stima da carico e ripetizioni.',
     volume: 'Somma di kg × ripetizioni di tutte le serie.',
     passo: 'Minuti per chilometro: più basso è, più sei veloce.',
   }
@@ -115,7 +115,15 @@ export function DettaglioEsercizio() {
                 {numero(record.maxKg.kg)} <small>kg × {record.maxKg.rip}</small>
               </div>
             </div>
-            {record.massimale && (
+            {record.massimaleReale && (
+              <div className="metrica">
+                <div className="etichetta">Massimale · {dataBreve(record.massimaleReale.data)}</div>
+                <div className="valore">
+                  {numero(record.massimaleReale.kg)} <small>kg × 1</small>
+                </div>
+              </div>
+            )}
+            {record.massimale && !record.massimaleReale && (
               <div className="metrica">
                 <div className="etichetta">Massimale stimato</div>
                 <div className="valore">

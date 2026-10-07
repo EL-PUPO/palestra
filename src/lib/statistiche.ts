@@ -117,6 +117,8 @@ export function puntiTempo(storico: Prestazione[]): PuntoTempo[] {
 export function recordForza(storico: Prestazione[]) {
   let maxKg: { kg: number; rip: number; data: number } | undefined
   let massimale: { valore: number; data: number } | undefined
+  /** il carico più alto alzato davvero per 1 colpo */
+  let massimaleReale: { kg: number; data: number } | undefined
   let volume: { valore: number; data: number } | undefined
   for (const { sessione, voce } of storico) {
     for (const s of serieFatte(voce)) {
@@ -125,11 +127,12 @@ export function recordForza(storico: Prestazione[]) {
       if (k > 0 && (!maxKg || k > maxKg.kg || (k === maxKg.kg && r > maxKg.rip))) maxKg = { kg: k, rip: r, data: sessione.inizio }
       const m = massimaleStimato(k, r)
       if (m > 0 && (!massimale || m > massimale.valore)) massimale = { valore: m, data: sessione.inizio }
+      if (k > 0 && r === 1 && (!massimaleReale || k > massimaleReale.kg)) massimaleReale = { kg: k, data: sessione.inizio }
     }
     const v = volumeVoce(voce)
     if (v > 0 && (!volume || v > volume.valore)) volume = { valore: v, data: sessione.inizio }
   }
-  return { maxKg, massimale, volume }
+  return { maxKg, massimale, massimaleReale, volume }
 }
 
 /** Record battuti in una sessione rispetto a tutte le precedenti */
@@ -145,7 +148,9 @@ export function recordBattuti(sessione: Sessione, sessioni: Sessione[], nomi: Ma
     const nome = nomi.get(voce.esercizioId) ?? 'Esercizio'
     const maxOra = Math.max(...fatte.map((s) => s.kg ?? 0))
     const massOra = Math.max(...fatte.map((s) => massimaleStimato(s.kg ?? 0, s.valore ?? 0)))
-    if (maxOra > prima.maxKg.kg) messaggi.push(`${nome}: nuovo carico massimo`)
+    const singolaOra = Math.max(0, ...fatte.filter((s) => s.valore === 1).map((s) => s.kg ?? 0))
+    if (singolaOra > 0 && singolaOra > (prima.massimaleReale?.kg ?? 0)) messaggi.push(`${nome}: nuovo massimale (${singolaOra.toLocaleString('it-IT')} kg)`)
+    else if (maxOra > prima.maxKg.kg) messaggi.push(`${nome}: nuovo carico massimo`)
     else if (prima.massimale && massOra > prima.massimale.valore + 0.01) messaggi.push(`${nome}: nuovo massimale stimato`)
   }
   return messaggi
@@ -202,12 +207,15 @@ export function suggerisci(storico: Prestazione[], obiettivo: Obiettivo, increme
   const range = obiettivo.repMax !== undefined && obiettivo.repMin !== undefined && obiettivo.repMax > obiettivo.repMin && !obiettivo.repPerSerie
   const serieAttese = obiettivo.serie || 1
 
+  // le prove di massimale non contano per decidere se aumentare il carico di lavoro
+  const lavoro = (v: VoceSessione) => serieFatte(v).filter((s) => !s.massimale)
   const completa = (v: VoceSessione) => {
-    const fatte = serieFatte(v)
-    return fatte.length >= serieAttese && fatte.every((s) => s.esito === 'si')
+    const fatte = lavoro(v)
+    return fatte.length > 0 && fatte.length >= serieAttese && fatte.every((s) => s.esito === 'si')
   }
-  const alMassimo = (v: VoceSessione) => !range || serieFatte(v).every((s) => (s.valore ?? 0) >= obiettivo.repMax!)
-  const caricoDi = (v: VoceSessione) => Math.max(0, ...serieFatte(v).map((s) => s.kg ?? 0))
+  const alMassimo = (v: VoceSessione) => !range || lavoro(v).every((s) => (s.valore ?? 0) >= obiettivo.repMax!)
+  const caricoDi = (v: VoceSessione) => Math.max(0, ...lavoro(v).map((s) => s.kg ?? 0))
+  if (obiettivo.massimale || !lavoro(storico[0].voce).length) return undefined
 
   const ultima = storico[0].voce
   const kgUltimo = caricoDi(ultima)

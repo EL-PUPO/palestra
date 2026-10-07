@@ -25,7 +25,7 @@ export function leggiTestoRipetizioni(t: string, serie: number): Pick<Obiettivo,
 }
 
 /** "4 × 8-10 · 60 kg · rec 1'30"" */
-export function descriviObiettivo(o: Obiettivo, tipo: TipoEsercizio): string {
+export function descriviObiettivo(o: Obiettivo, tipo: TipoEsercizio, opzioni: { senzaRecupero?: boolean } = {}): string {
   const parti: string[] = []
   if (tipo === 'cardio') {
     if (o.durataMin) parti.push(`${numero(o.durataMin, 1)} min`)
@@ -35,10 +35,12 @@ export function descriviObiettivo(o: Obiettivo, tipo: TipoEsercizio): string {
     parti.push(`${o.serie} × ${o.secondi ? recupero(o.secondi) : '?'}`)
   } else {
     const rip = testoRipetizioni(o)
-    parti.push(rip ? `${o.serie} × ${rip}` : `${o.serie} serie`)
+    if (o.massimale) {
+      parti.push(`${o.serie} × ${rip || '1'} ${!rip || rip === '1' ? 'colpo' : 'colpi'}`, 'massimale')
+    } else parti.push(rip ? `${o.serie} × ${rip}` : `${o.serie} serie`)
     if (o.caricoKg) parti.push(`${numero(o.caricoKg)} kg`)
   }
-  if (tipo !== 'cardio' && o.recuperoSec) parti.push(`rec ${recupero(o.recuperoSec)}`)
+  if (tipo !== 'cardio' && o.recuperoSec && !opzioni.senzaRecupero) parti.push(`rec ${recupero(o.recuperoSec)}`)
   return parti.join(' · ')
 }
 

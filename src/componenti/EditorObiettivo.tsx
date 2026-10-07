@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Obiettivo, TipoEsercizio } from '../db'
 import { leggiTestoRipetizioni, NOMI_TIPO, testoRipetizioni } from '../lib/descrizioni'
-import { CampoNumero, CampoTesto, Passi, Segmentato } from './ui'
+import { CampoNumero, CampoTesto, Interruttore, Passi, Segmentato } from './ui'
 
 interface Props {
   tipo: TipoEsercizio
@@ -47,12 +47,31 @@ export function EditorObiettivo({ tipo, obiettivo: o, cambia, tipoModificabile =
                 value={testoRip}
                 onChange={(e) => {
                   setTestoRip(e.target.value)
-                  aggiorna(leggiTestoRipetizioni(e.target.value, o.serie))
+                  const rip = leggiTestoRipetizioni(e.target.value, o.serie)
+                  // 1 ripetizione = massimale; sopra le 3 non lo è più
+                  const massimale = rip.repMax === undefined ? o.massimale : rip.repMax <= 1 ? true : rip.repMax > 3 ? undefined : o.massimale
+                  aggiorna({ ...rip, massimale })
                 }}
               />
             </label>
           </div>
           <p className="piccolo muto">Scrivi 8-10 per un intervallo o 10/8/6 per una piramide.</p>
+          <div className="riga spazio" style={{ gap: 12 }}>
+            <div>
+              <div style={{ fontWeight: 600 }}>Massimale</div>
+              <div className="piccolo muto">Da 1 a 3 colpi al carico più alto. Con 1 ripetizione si attiva da solo.</div>
+            </div>
+            <Interruttore
+              attivo={!!o.massimale}
+              etichetta="Massimale"
+              cambia={(attivo) => {
+                if (!attivo) return aggiorna({ massimale: undefined })
+                const t = o.repMax !== undefined && o.repMax <= 3 ? testoRip : '1'
+                setTestoRip(t)
+                aggiorna({ massimale: true, ...leggiTestoRipetizioni(t, o.serie) })
+              }}
+            />
+          </div>
           <label className="campo">
             <span>Carico di partenza (kg, facoltativo)</span>
             <CampoNumero className="input" valore={o.caricoKg} cambia={(caricoKg) => aggiorna({ caricoKg })} placeholder="es. 40" />

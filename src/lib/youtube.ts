@@ -13,6 +13,9 @@ export interface LettoreYouTube {
   getPlaylist(): string[] | null
   getPlaylistIndex(): number
   getVideoData(): { title?: string; author?: string; video_id?: string }
+  getCurrentTime(): number
+  getDuration(): number
+  seekTo(secondi: number, caricaAvanti: boolean): void
   destroy(): void
 }
 

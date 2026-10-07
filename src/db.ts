@@ -28,6 +28,8 @@ export interface Obiettivo {
   durataMin?: number
   distanzaKm?: number
   note?: string
+  /** prova di massimale: 1–3 colpi al carico più alto */
+  massimale?: boolean
 }
 
 export interface EsercizioScheda extends Obiettivo {
@@ -61,6 +63,8 @@ export interface SerieRegistrata {
   /** ripetizioni (o secondi) fatte */
   valore?: number
   esito: Esito
+  /** serie di massimale (1–3 colpi): non conta come serie "mancata" */
+  massimale?: boolean
 }
 
 export interface CardioRegistrato {
@@ -100,6 +104,8 @@ export interface Sessione {
   indiceCorrente?: number
   /** registro di un allenamento passato senza durata indicata */
   senzaDurata?: boolean
+  /** recupero uguale per tutto l'allenamento (secondi) */
+  recuperoSec?: number
 }
 
 export interface MisuraCorpo {

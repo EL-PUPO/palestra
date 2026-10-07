@@ -11,6 +11,8 @@ I dati restano solo sul telefono.
   - **Allenati** (guidata): un esercizio alla volta, timer di recupero automatico con «cosa viene dopo», passaggio automatico all'esercizio successivo, suggerimenti di carico, riscaldamento, calcolatore dischi, sostituzione esercizio (macchina occupata), schermo sempre acceso, musica.
   - **Registra**: tutti gli esercizi in una pagina, senza timer, per segnare i risultati mentre ti alleni o dopo (con giorno, ora e durata).
 - **Serie con − 0 +**: «0» = ripetizioni come da scheda; ogni + è una ripetizione in più, ogni − una in meno. I carichi dell'ultima volta sono già compilati.
+- **Massimale**: una serie da 1 colpo diventa da sola un massimale (MAX, fino a 3 colpi); nella scheda basta scrivere «massimale», «1RM» o «max 3 colpi». Il massimale reale compare tra i record.
+- **Recupero unico** per tutto l'allenamento (tasto «Recupero»), con ±15 secondi sulla barra durante il recupero; cronometro nascondibile; data, ora e durata degli allenamenti modificabili.
 - **Musica**: salvi le tue playlist di YouTube e le ascolti in un lettore dentro l'app durante l'allenamento (oppure le apri nell'app YouTube).
 - **Suggerimenti di carico**: se chiudi tutte le serie (e, se c'è un intervallo come 8-10, arrivi al massimo) l'app ti propone di aumentare il carico.
 - **Cardio** a tempo e/o distanza, esercizi **a tempo** (plank), **piramidali** (10/8/6), superserie.

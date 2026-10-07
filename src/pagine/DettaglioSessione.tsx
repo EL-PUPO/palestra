@@ -7,7 +7,7 @@ import { db, type CardioRegistrato, type VoceSessione } from '../db'
 import { conKg, conValore, IntestazioneSerie, RigaSerie } from '../componenti/Serie'
 import { esitoCardio } from '../lib/allenamento'
 import { descriviObiettivo } from '../lib/descrizioni'
-import { dataLunga, durataLeggibile, maiuscolaIniziale, numero, ora, recupero } from '../lib/formato'
+import { chiaveGiorno, daGiornoEOra, dataLunga, durataLeggibile, maiuscolaIniziale, numero, ora, orario, recupero } from '../lib/formato'
 import { contaSerie, recordBattuti, volumeSessione } from '../lib/statistiche'
 
 function conCardio(v: VoceSessione, modifiche: Partial<CardioRegistrato>): VoceSessione {
@@ -33,6 +33,9 @@ export function DettaglioSessione() {
   const nomi = new Map([...esercizi].map(([k, e]) => [k, e.nome]))
   const record = recordBattuti(sessione, tutte, nomi)
   const durata = (sessione.fine ?? Date.now()) - sessione.inizio
+
+  /** Cambia giorno/ora mantenendo la durata */
+  const spostaInizio = (inizio: number) => db.sessioni.update(sessione.id, { inizio, fine: inizio + ((sessione.fine ?? sessione.inizio) - sessione.inizio) })
 
   const salvaVoce = (uid: string, f: (v: VoceSessione) => VoceSessione) =>
     db.transaction('rw', db.sessioni, async () => {
@@ -72,10 +75,33 @@ export function DettaglioSessione() {
           </div>
         )}
 
-        {!riepilogo && (
+        {!riepilogo && !modifica && (
           <p className="muto" style={{ marginTop: -8 }}>
             {maiuscolaIniziale(dataLunga(sessione.inizio))} · {ora(sessione.inizio)}
           </p>
+        )}
+
+        {modifica && (
+          <div className="card griglia-3">
+            <label className="campo">
+              <span>Giorno</span>
+              <input type="date" value={chiaveGiorno(sessione.inizio)} max={chiaveGiorno()} onChange={(e) => e.target.value && spostaInizio(daGiornoEOra(e.target.value, orario(sessione.inizio)))} />
+            </label>
+            <label className="campo">
+              <span>Ora</span>
+              <input type="time" value={orario(sessione.inizio)} onChange={(e) => e.target.value && spostaInizio(daGiornoEOra(chiaveGiorno(sessione.inizio), e.target.value))} />
+            </label>
+            <label className="campo">
+              <span>Durata (min)</span>
+              <CampoNumero
+                className="input"
+                decimali={false}
+                placeholder="—"
+                valore={sessione.senzaDurata ? undefined : Math.round(durata / 60000)}
+                cambia={(min) => db.sessioni.update(sessione.id, min ? { fine: sessione.inizio + min * 60000, senzaDurata: undefined } : { fine: sessione.inizio, senzaDurata: true })}
+              />
+            </label>
+          </div>
         )}
 
         <div className="metriche">
@@ -166,7 +192,8 @@ export function DettaglioSessione() {
                         <span className="muto">Serie {i + 1}</span>
                         <span className="riga" style={{ gap: 6, fontWeight: 600 }}>
                           {v.tipo === 'ripetizioni' ? `${s.kg !== undefined ? `${numero(s.kg)} kg × ` : ''}${s.valore ?? '–'}` : recupero(s.valore)}
-                          {s.obiettivo !== undefined && s.valore !== undefined && s.valore !== s.obiettivo && (
+                          {s.massimale && <span className="badge accento">MAX</span>}
+                          {!s.massimale && s.obiettivo !== undefined && s.valore !== undefined && s.valore !== s.obiettivo && (
                             <span className={s.valore > s.obiettivo ? 'successo' : 'attenzione'}>
                               ({s.valore > s.obiettivo ? '+' : '−'}
                               {Math.abs(s.valore - s.obiettivo)})

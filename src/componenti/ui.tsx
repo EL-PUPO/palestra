@@ -145,12 +145,15 @@ export function Contatore({
   cambia,
   passo = 1,
   unita = 'rip',
+  solaLettura,
 }: {
   obiettivo: number | undefined
   valore: number | undefined
   cambia: (v: number) => void
   passo?: number
   unita?: string
+  /** mostra il numero assoluto senza campo da scrivere (es. "1 colpo" del massimale) */
+  solaLettura?: boolean
 }) {
   const v = valore ?? obiettivo ?? 0
   const relativo = obiettivo !== undefined
@@ -167,6 +170,11 @@ export function Contatore({
           <span className="totale">
             {v} {unita}
           </span>
+        </div>
+      ) : solaLettura ? (
+        <div className="contatore-valore" aria-live="polite">
+          <span className="delta">{v}</span>
+          <span className="totale">{unita}</span>
         </div>
       ) : (
         <div className="contatore-valore">
