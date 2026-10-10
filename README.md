@@ -1,7 +1,7 @@
 # Palestra
 
-Il mio diario di allenamento: una web app da installare sull'iPhone (PWA) che funziona anche offline.
-I dati restano solo sul telefono.
+Diario di allenamento: una web app da installare sull'iPhone (PWA) che funziona anche offline.
+Può usarla chiunque dallo stesso link: ognuno ha i suoi dati, che restano solo sul suo telefono (niente account).
 
 ## Cosa fa
 

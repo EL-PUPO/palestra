@@ -1,8 +1,8 @@
-import { Download, Music, Trash2, Upload } from 'lucide-react'
+import { Download, Music, Share2, Trash2, Upload } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { GestionePlaylist } from '../componenti/PannelloMusica'
-import { CampoNumero, Interruttore, mostraMessaggio, Passi, Segmentato, Testata } from '../componenti/ui'
+import { CampoNumero, CampoTesto, Interruttore, mostraMessaggio, Passi, Segmentato, Testata } from '../componenti/ui'
 import { cancellaTutto, condividiBackup, ripristinaBackup } from '../lib/backup'
 import { giorniFa, numero } from '../lib/formato'
 import { aggiornaImpostazioni, useImpostazioni, type Accento } from '../lib/impostazioni'
@@ -36,6 +36,25 @@ export function Impostazioni() {
   const naviga = useNavigate()
   const [conFoto, setConFoto] = useState(true)
   const [occupato, setOccupato] = useState(false)
+
+  const invitaAmico = async () => {
+    const url = `${location.origin}${location.pathname}`
+    const testo = 'Ti consiglio questa app per la palestra: aprila con Safari e tocca Condividi → Aggiungi alla schermata Home.'
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Palestra', text: testo, url })
+        return
+      }
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') return
+    }
+    try {
+      await navigator.clipboard.writeText(`${testo} ${url}`)
+      mostraMessaggio('Link copiato: incollalo in un messaggio')
+    } catch {
+      mostraMessaggio(url)
+    }
+  }
 
   const esporta = async () => {
     setOccupato(true)
@@ -76,6 +95,22 @@ export function Impostazioni() {
     <>
       <Testata titolo="Impostazioni" indietro />
       <div className="pagina">
+        <div className="sezione">
+          <span className="etichetta-sezione">Profilo</span>
+          <div className="card colonna">
+            <label className="campo">
+              <span>Il tuo nome</span>
+              <CampoTesto className="input" valore={imp.nomeUtente ?? ''} placeholder="Il tuo nome" cambia={(nome) => aggiornaImpostazioni({ nomeUtente: nome.trim() || undefined })} />
+            </label>
+            <p className="piccolo muto">
+              Ognuno usa l'app sul suo telefono con i suoi dati: schede, allenamenti e misure non si mescolano e non passano da nessun server.
+            </p>
+            <button className="btn" onClick={invitaAmico}>
+              <Share2 size={18} /> Invita un amico
+            </button>
+          </div>
+        </div>
+
         <div className="sezione">
           <span className="etichetta-sezione">Aspetto</span>
           <div className="card colonna">

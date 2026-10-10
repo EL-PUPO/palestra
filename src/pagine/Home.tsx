@@ -69,7 +69,8 @@ export function Home() {
       />
       <div className="pagina">
         <p className="muto" style={{ marginTop: -10 }}>
-          {maiuscolaIniziale(dataLunga(Date.now()))}
+          {imp.nomeUtente ? `Ciao ${imp.nomeUtente} · ` : ''}
+          {imp.nomeUtente ? dataLunga(Date.now()) : maiuscolaIniziale(dataLunga(Date.now()))}
         </p>
 
         {musica && <PannelloMusica chiudi={() => impostaMusicaAperta(false)} />}

@@ -2,7 +2,9 @@ import { ChartLine, ClipboardList, History, House, Scale } from 'lucide-react'
 import { HashRouter, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { MiniBrani } from './componenti/LibreriaBrani'
 import { Toast } from './componenti/ui'
+import { configurazioneVerificata, useImpostazioni } from './lib/impostazioni'
 import { Allenamento } from './pagine/Allenamento'
+import { Benvenuto } from './pagine/Benvenuto'
 import { Corpo } from './pagine/Corpo'
 import { DettaglioEsercizio } from './pagine/DettaglioEsercizio'
 import { DettaglioScheda } from './pagine/DettaglioScheda'
@@ -25,6 +27,16 @@ const TAB = [
 
 function Struttura() {
   const { pathname } = useLocation()
+  const imp = useImpostazioni()
+  if (!imp.configurato) {
+    if (!configurazioneVerificata()) return null
+    return (
+      <div className="app senza-tab">
+        <Benvenuto />
+        <Toast />
+      </div>
+    )
+  }
   const senzaTab = pathname.startsWith('/allenamento') || pathname.startsWith('/registro')
   return (
     <div className={`app${senzaTab ? ' senza-tab' : ''}`}>

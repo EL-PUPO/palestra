@@ -4,6 +4,10 @@ export type Tema = 'auto' | 'chiaro' | 'scuro'
 export type Accento = 'blu' | 'verde' | 'arancio' | 'rosso' | 'viola' | 'rosa' | 'ciano'
 
 export interface Impostazioni {
+  /** nome di chi usa l'app su questo telefono */
+  nomeUtente?: string
+  /** prima configurazione fatta (schermata di benvenuto) */
+  configurato: boolean
   tema: Tema
   accento: Accento
   testo: 'normale' | 'grande'
@@ -38,6 +42,7 @@ export interface BranoMusica {
 }
 
 export const PREDEFINITE: Impostazioni = {
+  configurato: false,
   tema: 'auto',
   accento: 'blu',
   testo: 'normale',
@@ -101,6 +106,29 @@ export function useImpostazioni(): Impostazioni {
     () => correnti,
   )
 }
+
+/**
+ * Chi usava già l'app prima della schermata di benvenuto ha già i suoi dati:
+ * la salta e il nome lo mette quando vuole nelle Impostazioni.
+ */
+export async function segnaConfiguratoSeCiSonoDati() {
+  try {
+    if (correnti.configurato) return
+    const { db } = await import('../db')
+    const [schede, sessioni] = await Promise.all([db.schede.count(), db.sessioni.count()])
+    if (schede + sessioni > 0) aggiornaImpostazioni({ configurato: true })
+  } finally {
+    verificato = true
+    // nuovo oggetto, così React si accorge del cambiamento e ridisegna
+    correnti = { ...correnti }
+    ascoltatori.forEach((a) => a())
+  }
+}
+
+let verificato = false
+
+/** Finché non so se ci sono già dati, non mostro la schermata di benvenuto (evita un lampo) */
+export const configurazioneVerificata = () => verificato
 
 const scuroDiSistema = typeof window !== 'undefined' ? window.matchMedia('(prefers-color-scheme: dark)') : null
 
